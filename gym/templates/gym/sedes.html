@@ -1,0 +1,15 @@
+{% extends 'gym/base.html' %}
+{% block content %}
+<h2>Lista de Sedes</h2>
+<table border="1">
+    <tr><th>ID</th><th>Nombre</th><th>Ciudad</th><th>Capacidad</th></tr>
+    {% for sede in sedes %}
+    <tr>
+        <td>{{ sede.0 }}</td>
+        <td>{{ sede.1 }}</td>
+        <td>{{ sede.2 }}</td>
+        <td>{{ sede.3 }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

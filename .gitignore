@@ -1,0 +1,33 @@
+# Entorno virtual
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos de configuración con secretos
+.env
+*.env
+
+# Archivos de caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Base de datos SQLite (si la usaras)
+db.sqlite3
+
+# Archivos de configuración de editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos de migraciones de Django (opcional, pero no es necesario subirlos porque cada uno los genera)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Archivos estáticos y media recolectados
+staticfiles/
+media/
+

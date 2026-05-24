@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Gimnasio</title></head>
+<body>
+    <h1>Proyecto Gimnasio</h1>
+    <nav>
+        <a href="{% url 'sedes' %}">Sedes</a> |
+        <a href="{% url 'usuarios' %}">Usuarios</a>
+    </nav>
+    <hr>
+    {% block content %}{% endblock %}
+</body>
+</html>
