@@ -68,6 +68,13 @@ python manage.py runserver
 Abre tu navegador en http://127.0.0.1:8000/sedes/ para ver la lista de sedes.
 
 
+## Ejeccuta el servidor de Docker
+
+```
+docker-compose up --build  
+```
+
+
 
 # Estructura del proyecto
 

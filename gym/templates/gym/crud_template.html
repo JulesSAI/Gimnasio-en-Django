@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD - {{ model_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --surface-hover: #334155;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-back {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--text-color);
+        }
+
+        /* Form Card */
+        .card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        form p {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        form label {
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        form input, form select, form textarea {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        form input:focus, form select:focus, form textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(0,0,0,0.2);
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: var(--surface-hover);
+        }
+
+        .btn-delete {
+            color: var(--danger-color);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: color 0.2s, transform 0.1s;
+        }
+
+        .btn-delete:hover {
+            color: var(--danger-hover);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'home' %}" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+            <h1>Gestión de {{ model_name }}</h1>
+            <div></div> <!-- Spacer -->
+        </div>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert" style="padding: 1rem; margin-bottom: 1.5rem; border-radius: 0.375rem; color: white; background-color: {% if message.tags == 'error' %}var(--danger-color){% else %}var(--primary-color){% endif %};">
+                <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2 class="card-title">Añadir Nuevo Registro</h2>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn-submit">Guardar Registro</button>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        {% if records %}
+                            {% for field in records.0|default_if_none:""|dictsort:"_meta.fields" %}
+                                <!-- This is tricky in pure Django without custom tags. -->
+                            {% endfor %}
+                            <th>Detalles del Registro (Representación)</th>
+                            <th style="width: 80px; text-align: center;">Acción</th>
+                        {% else %}
+                            <th>No hay registros disponibles.</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>
+                            <!-- Dynamically showing fields -->
+                            <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                                {% for field in record.fields %}
+                                    <div>
+                                        <span style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">{{ field.name }}</span><br>
+                                        <strong>{{ field.value }}</strong>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <form method="POST" action="{% url delete_url_name record.pk %}" onsubmit="return confirm('¿Estás seguro de eliminar este registro?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-delete" title="Eliminar">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; color: var(--text-muted);">
+                            La tabla está vacía.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
