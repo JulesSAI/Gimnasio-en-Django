@@ -51,4 +51,14 @@ urlpatterns = [
 
     path('crud/rutina_ejercicio/', views.crud_rutina_ejercicio, name='crud_rutina_ejercicio'),
     path('crud/rutina_ejercicio/delete/<int:pk>/', views.delete_rutina_ejercicio, name='delete_rutina_ejercicio'),
+
+   
+    # Consultas Especiales
+path('consultas-especiales/', views.consultas_especiales, name='consultas_especiales'),
+path('consulta-left-join/', views.consulta_left_join, name='consulta_left_join'),
+path('consulta-inner-join/', views.consulta_inner_join, name='consulta_inner_join'),
+path('consulta-group-by/', views.consulta_group_by, name='consulta_group_by'),
+path('consulta-agregadas/', views.consulta_agregadas, name='consulta_agregadas'),
+path('consulta-subquery/', views.consulta_subquery, name='consulta_subquery'),
+path('consulta-where-order/', views.consulta_where_order, name='consulta_where_order'),
 ]

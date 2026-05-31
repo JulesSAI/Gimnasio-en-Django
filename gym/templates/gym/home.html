@@ -78,7 +78,7 @@
 <body>
 
     <div class="container">
-        <h1>Admin Dashboard</h1>
+        <h1>🏋️ Admin Dashboard</h1>
         
         <div class="menu-grid">
             {% for name, url_name in models_list %}
@@ -87,6 +87,12 @@
                 {{ name }}
             </a>
             {% endfor %}
+
+              <!-- Botón a Consultas Especiales (Página intermedia) -->
+            <a href="{% url 'consultas_especiales' %}" class="menu-item menu-item-consulta">
+                <i class="fa-solid fa-chart-line"></i>
+                📊 Consultas Especiales
+            </a>
         </div>
     </div>
 

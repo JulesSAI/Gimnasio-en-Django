@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Count, Avg, Max, Min, Q
 from django.db import connection, IntegrityError
 from django.contrib import messages
 from .models import (
@@ -224,7 +225,11 @@ def crud_usuario(request):
             return redirect('crud_usuario')
     else:
         form = UsuarioForm()
-    records = format_records(Usuario.objects.all())
+    
+    # ORDER BY (Ordenar por nombres)
+    records = format_records(Usuario.objects.all().order_by('nombres'))
+    
+    
     return render(request, 'gym/crud_template.html', {'form': form, 'records': records, 'model_name': 'Usuario', 'delete_url_name': 'delete_usuario'})
 
 def delete_usuario(request, pk):
@@ -389,3 +394,118 @@ def delete_rutina_ejercicio(request, pk):
     except IntegrityError:
         messages.error(request, "No se puede eliminar el registro por conflictos de FK.")
     return redirect('crud_rutina_ejercicio')
+
+def consultas_especiales(request):
+    """Página con los botones de consultas"""
+    return render(request, 'gym/consultas_especiales.html')
+
+
+##LEFT JOIN
+
+# 1. LEFT JOIN - Usuarios con Perfil Médico
+def consulta_left_join(request):
+    usuarios = Usuario.objects.select_related('perfilmedico').all().order_by('nombres')
+    return render(request, 'gym/resultado_consulta.html', {
+        'titulo': 'LEFT JOIN: Usuarios con Perfil Médico',
+        'descripcion': 'Muestra todos los usuarios, tengan o no perfil médico',
+        'headers': ['ID', 'Nombre', 'Email', 'Estado', 'Grupo Sanguíneo', 'Peso (kg)', 'Objetivo'],
+        'rows': [
+            [
+                u.id_usuario,
+                f"{u.nombres} {u.apellidos}",
+                u.email,
+                u.estado_suscripcion,
+                u.perfilmedico.grupo_sanguineo if hasattr(u, 'perfilmedico') and u.perfilmedico else '-',
+                u.perfilmedico.peso_actual_kg if hasattr(u, 'perfilmedico') and u.perfilmedico else '-',
+                u.perfilmedico.objetivo_fisico if hasattr(u, 'perfilmedico') and u.perfilmedico else '-',
+            ]
+            for u in usuarios
+        ]
+    })
+
+# 2. INNER JOIN con 3 tablas
+def consulta_inner_join(request):
+    clases = ClaseGrupal.objects.select_related('id_sede', 'id_entrenador').all()
+    return render(request, 'gym/resultado_consulta.html', {
+        'titulo': 'INNER JOIN: Clases con Sede y Entrenador',
+        'descripcion': 'Relaciona 3 tablas: CLASE_GRUPAL, SEDE, ENTRENADOR',
+        'headers': ['Clase', 'Fecha/Hora Inicio', 'Fecha/Hora Fin', 'Sede', 'Entrenador'],
+        'rows': [
+            [
+                c.nombre_clase,
+                c.fecha_hora_inicio,
+                c.fecha_hora_fin,
+                c.id_sede.nombre_sede,
+                f"{c.id_entrenador.nombres} {c.id_entrenador.apellidos}"
+            ]
+            for c in clases
+        ]
+    })
+
+# 3. GROUP BY + HAVING
+def consulta_group_by(request):
+    sedes = Sede.objects.annotate(
+        total_usuarios=Count('usuario')
+    ).filter(total_usuarios__gte=2).order_by('-total_usuarios')
+    return render(request, 'gym/resultado_consulta.html', {
+        'titulo': 'GROUP BY + HAVING: Sedes con 2 o más usuarios',
+        'descripcion': 'Agrupa por sede, cuenta usuarios y filtra (HAVING) los que tienen >= 2',
+        'headers': ['Sede', 'Ciudad', 'Dirección', 'Total Usuarios'],
+        'rows': [[s.nombre_sede, s.ciudad, s.direccion, s.total_usuarios] for s in sedes]
+    })
+
+# 4. Funciones Agregadas (AVG, MAX, MIN)
+def consulta_agregadas(request):
+    stats = PerfilMedico.objects.filter(
+        objetivo_fisico__isnull=False
+    ).values('objetivo_fisico').annotate(
+        cantidad=Count('id_perfil'),
+        peso_promedio=Avg('peso_actual_kg'),
+        peso_maximo=Max('peso_actual_kg'),
+        peso_minimo=Min('peso_actual_kg')
+    ).order_by('-peso_promedio')
+    return render(request, 'gym/resultado_consulta.html', {
+        'titulo': 'Funciones Agregadas: AVG, MAX, MIN',
+        'descripcion': 'Estadísticas de peso por objetivo físico',
+        'headers': ['Objetivo', 'Cantidad', 'Peso Promedio', 'Peso Máximo', 'Peso Mínimo'],
+        'rows': [
+            [s['objetivo_fisico'], s['cantidad'], 
+             round(s['peso_promedio'], 1) if s['peso_promedio'] else '-',
+             s['peso_maximo'] if s['peso_maximo'] else '-',
+             s['peso_minimo'] if s['peso_minimo'] else '-']
+            for s in stats
+        ]
+    })
+
+# 5. Subconsulta
+def consulta_subquery(request):
+    from django.db.models import OuterRef, Count, Subquery
+    subquery = ReservaClase.objects.filter(id_usuario=OuterRef('id_usuario')).values('id_usuario').annotate(total=Count('id_reserva')).values('total')
+    usuarios = Usuario.objects.annotate(
+        total_reservas=Subquery(subquery, output_field=models.IntegerField())
+    ).filter(total_reservas__gt=0).order_by('-total_reservas')
+    return render(request, 'gym/resultado_consulta.html', {
+        'titulo': 'Subconsulta: Usuarios con reservas activas',
+        'descripcion': 'Usuarios que tienen al menos una reserva de clase',
+        'headers': ['ID', 'Nombre', 'Email', 'Total Reservas'],
+        'rows': [[u.id_usuario, f"{u.nombres} {u.apellidos}", u.email, u.total_reservas] for u in usuarios]
+    })
+
+# 6. WHERE + ORDER BY
+def consulta_where_order(request):
+    entrenadores = Entrenador.objects.filter(anios_experiencia__gte=3).select_related('id_sede_base').order_by('-anios_experiencia')
+    return render(request, 'gym/resultado_consulta.html', {
+        'titulo': 'WHERE + ORDER BY: Entrenadores con 3+ años de experiencia',
+        'descripcion': 'Filtra por años de experiencia y ordena descendente',
+        'headers': ['ID', 'Nombre', 'Especialidad', 'Años Experiencia', 'Sede Base'],
+        'rows': [
+            [
+                e.id_entrenador,
+                f"{e.nombres} {e.apellidos}",
+                e.especialidad or '-',
+                e.anios_experiencia,
+                e.id_sede_base.nombre_sede
+            ]
+            for e in entrenadores
+        ]
+    })
